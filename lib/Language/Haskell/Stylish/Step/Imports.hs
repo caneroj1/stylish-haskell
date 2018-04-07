@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE CPP               #-}
 --------------------------------------------------------------------------------
 module Language.Haskell.Stylish.Step.Imports
     ( Options (..)
@@ -22,7 +23,11 @@ import           Data.Char                       (toLower)
 import           Data.List                       (intercalate, sortBy)
 import qualified Data.Map                        as M
 import           Data.Maybe                      (isJust, maybeToList)
-import           Data.Monoid                     ((<>))
+
+#if !MIN_VERSION_base(4,11,0)
+import           Data.Semigroup
+#endif
+
 import           Data.Ord                        (comparing)
 import qualified Data.Set                        as S
 import qualified Language.Haskell.Exts           as H
@@ -172,6 +177,9 @@ instance Ord l => Monoid (ImportPortion l) where
   mempty = ImportSome []
   mappend (ImportSome a) (ImportSome b) = ImportSome (setUnion a b)
   mappend _ _                           = ImportAll
+
+instance Ord l => Semigroup (ImportPortion l) where
+  (<>) = mappend
 
 -- | O(n log n) union.
 setUnion :: Ord a => [a] -> [a] -> [a]
